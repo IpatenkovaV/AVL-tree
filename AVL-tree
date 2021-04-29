@@ -1,0 +1,126 @@
+#include <iostream>
+#include <cstdlib>
+
+using std::cout;
+using std::cin;
+using std::endl;
+
+struct TreeItem {
+    int key;
+    TreeItem* ptr_Right;
+    TreeItem* ptr_Left;
+    TreeItem* ptr_Prev;
+};
+
+int random(int min, int max) {
+    return min + rand() % (max - min + 1);
+};
+
+// Добавление нового элемента дерева
+void insert(TreeItem*& ptr_Root, TreeItem* ptr_Prev, int key) {
+    if (ptr_Root == nullptr) {
+        ptr_Root = new TreeItem;
+        ptr_Root->key = key;
+        ptr_Root->ptr_Left = nullptr;
+        ptr_Root->ptr_Right = nullptr;
+        ptr_Root->ptr_Prev = ptr_Prev;
+    }
+    else {
+        if (key <= ptr_Root->key) {
+            insert(ptr_Root->ptr_Left, ptr_Root, key);
+        }
+        else {
+            insert(ptr_Root->ptr_Right, ptr_Root, key);
+        }
+    }
+}
+
+// Поиск элемента дерева по его ключу. Возращает указатель на элемент дерева
+TreeItem* search(TreeItem*& ptr_Root, int key) {
+    if (ptr_Root != nullptr) {
+        if (ptr_Root->key == key) {
+            //cout << endl << "It was found! " << ptr_Root->key << endl;
+            //cout << endl << "It was found! " << ptr_Root->ptr_Prev->key << endl;
+            return ptr_Root;
+        }
+        else {
+            if (key <= ptr_Root->key) {
+                search(ptr_Root->ptr_Left, key);
+            }
+            else {
+                search(ptr_Root->ptr_Right, key);
+            }
+        }
+    }
+}
+
+// Служебная функция. Удаляет сам элемент
+void remove_element(TreeItem* ptr_Root) {
+    if (ptr_Root == nullptr) { return; }
+
+    remove_element(ptr_Root->ptr_Left);
+    remove_element(ptr_Root->ptr_Right);
+    //cout << "Delete: " << ptr_Root->key << endl;
+    delete ptr_Root;
+}
+
+// Удаление элемента. На вход получает указатель на корень, который точно содержит необходимый элемент, и ключ самого элемента
+void remove(TreeItem* ptr_Root, int key) {
+    ptr_Root = search(ptr_Root, key);
+    if (ptr_Root == nullptr) { return; }
+
+    remove_element(ptr_Root->ptr_Left);
+    remove_element(ptr_Root->ptr_Right);
+
+    ptr_Root->ptr_Left = ptr_Root->ptr_Right = nullptr;
+    if (ptr_Root->ptr_Prev != nullptr) {
+        if ((ptr_Root->ptr_Prev->ptr_Left != nullptr) and (ptr_Root->ptr_Prev->ptr_Left->key == key)) {
+            ptr_Root->ptr_Prev->ptr_Left = nullptr;
+            delete ptr_Root;
+        }
+        else if ((ptr_Root->ptr_Prev->ptr_Right != nullptr) and (ptr_Root->ptr_Prev->ptr_Right->key == key)) {
+            ptr_Root->ptr_Prev->ptr_Right = nullptr;
+            delete ptr_Root;
+        }
+    }
+    else if (ptr_Root->ptr_Prev == nullptr) {
+        delete ptr_Root;
+        ptr_Root = nullptr;
+    }
+    //cout << "yes";
+}
+
+// Вывод дерева в консоль.
+void print(TreeItem* p, int level = 0) {
+    if (p != nullptr) {
+        print(p->ptr_Right, level + 1);
+        for (size_t i = 0; i < level; ++i) { cout << "      |"; }
+
+        // Для корректного отображения первого элемента дерева
+        if (level) { cout << "-" << p->key; }
+        else { cout << p->key; }
+
+        if ((p->ptr_Left != nullptr) or (p->ptr_Right != nullptr)) { cout << "-<" << endl; }
+        else {
+            cout << endl;
+        }
+        print(p->ptr_Left, level + 1);
+    }
+}
+
+int main()
+{
+    TreeItem* ptr_Root = nullptr;
+
+    srand(1917);
+
+    for (size_t i = 0; i < 5; ++i) { insert(ptr_Root, nullptr, random(10, 1000)); }
+    print(ptr_Root, 0);
+
+    int element;
+    cout << endl << "Enter the key of element to delete: ";
+    cin >> element;
+    remove(ptr_Root, element);
+    cout << endl;
+    print(ptr_Root);
+} 
